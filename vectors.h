@@ -86,5 +86,7 @@ float Angle(const vec3& l, const vec3& r);
 vec3 Project(const vec3& len, const vec3& dir);
 vec3 Perp(const vec3& len, const vec3& dir);
 vec3 Refl(const vec3& v, const vec3& norm);
+
 #endif
+
 

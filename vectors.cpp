@@ -3,7 +3,6 @@
 #include <cmath>
 #include <cfloat>
 
-//
 //Operators
 //vec2
 vec2 operator+(const vec2& l, const vec2& r)

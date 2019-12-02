@@ -81,4 +81,5 @@ inline bool AlmostEqualRelativeAndAbs(float A, float B, float maxDiff, float max
 #define CMP(x, y) \
 	AlmostEqualRelativeAndAbs(x, y, 0.005f)
 
+
 #endif
