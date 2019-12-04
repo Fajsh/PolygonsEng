@@ -123,11 +123,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="matrices.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="vectors.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Compare.h" />
+    <ClInclude Include="matrices.h" />
     <ClInclude Include="vectors.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

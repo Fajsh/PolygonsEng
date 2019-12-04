@@ -85,6 +85,20 @@ bool Mul(float* res, const float* matL, int lRow, int lCol, const float* matR, i
 	return true;
 }
 
+void Cofactor(float* out, const float* min, int row, int col)
+{
+	for (int i = 0; i < row; ++i)
+	{
+		for (int j = 0; j < col; ++j)
+		{
+			int trg = col * j + i;
+			int src = col * j + i;
+			float sign = powf(-1.0f, i + j);
+			out[trg] = min[src] * sign;
+		}
+	}
+}
+
 
 //mat2
 mat2 Transpose(const mat2& m)
@@ -94,11 +108,77 @@ mat2 Transpose(const mat2& m)
 	return res;
 }
 
+float Determinant(const mat2& m)
+{
+	return m._11 * m._22 - m._12 * m._21;
+}
+
+mat2 Minor(const mat2& mat)
+{
+	return mat2(mat._22, mat._21, mat._12, mat._11);
+}
+
+mat2 Cut(const mat3& mat, int row, int col)
+{
+	mat2 res;
+	int idx = 0;
+	for (int i = 0; i < 3; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			if (i == row || j == col)continue;
+			int trg = idx++;
+			int src = 3 * i + j;
+			res.asArray[trg] = mat.asArray[src];
+		}
+	}
+	return res;
+}
+
+mat2 Cofactor(const mat2& mat)
+{
+	mat2 res;
+	Cofactor(res.asArray, Minor(mat).asArray, 2, 2);
+	return res;
+}
+
 //mat3
 mat3 Transpose(const mat3& m)
 {
 	mat3 res;
 	Transpose(m.asArray, res.asArray, 3, 3);
+	return res;
+}
+
+mat3 Minor(const mat3& mat)
+{
+	mat3 res;
+	for (int i = 0; i < 3; ++i)
+	{
+		for (int j = 0; j < 3; ++j)
+		{
+			res[i][j] == Determinant(Cut(mat, i, j));
+		}
+	}
+	return res;
+}
+
+mat3 Cofactor(const mat3& mat)
+{
+	mat3 res;
+	Cofactor(res.asArray, Minor(mat).asArray, 3, 3);
+	return res;
+}
+
+float Determinant(const mat3& m)
+{
+	float res = 0.0f;
+	mat3 cof = Cofactor(m);
+	for (int i = 0; i < 3; ++i)
+	{
+		int idx = 3 * 0 + i;
+		res += m.asArray[idx] * cof[0][j];
+	}
 	return res;
 }
 

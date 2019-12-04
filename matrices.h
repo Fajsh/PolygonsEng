@@ -122,13 +122,20 @@ mat4 operator*(const mat4& matL, const mat4& matR);
 //general
 void Transpose(const float* srcMat, float* dstMat, int srcRow, int srcCol);
 bool Mul(float* res, const float* matL, int lRow, int lCol, const float* matR, int rRow, int rCol);
+void Cofactor(float* out, const float* min, int row, int col);
 
 //mat2
 mat2 Transpose(const mat2& m);
+float Determinant(const mat2& m);
+mat2 Minor(const mat2& mat);
+mat2 Cut(const mat3& mat, int row, int col);
+mat2 Cofactor(const mat2& mat);
 
 //mat3
 mat3 Transpose(const mat3& m);
-
+mat3 Minor(const mat3& mat);
+mat3 Cofactor(const mat3& mat);
+float Determinant(const mat3& m);
 //mat4
 mat4 Transpose(const mat4& m);
 
