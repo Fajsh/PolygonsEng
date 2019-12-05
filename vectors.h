@@ -32,7 +32,8 @@ typedef struct vec3 {
 		float asArray[3];
 	};
 
-	inline float& operator[](int i) {
+	inline float& operator[](int i) 
+	{
 		return asArray[i];
 	}
 

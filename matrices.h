@@ -120,24 +120,53 @@ mat4 operator*(const mat4& matL, const mat4& matR);
 
 //Methods
 //general
-void Transpose(const float* srcMat, float* dstMat, int srcRow, int srcCol);
-bool Mul(float* res, const float* matL, int lRow, int lCol, const float* matR, int rRow, int rCol);
-void Cofactor(float* out, const float* min, int row, int col);
+void Transpose(const float* srcMat, float* dstMat, int srcRow, int srcCol);	//get transposed matrix
+bool Mul(float* res, const float* matL, int lRow, int lCol, const float* matR, int rRow, int rCol); //multiply two matrices
+void Cofactor(float* out, const float* min, int row, int col);// Get cofactor of matrix
 
 //mat2
-mat2 Transpose(const mat2& m);
-float Determinant(const mat2& m);
-mat2 Minor(const mat2& mat);
-mat2 Cut(const mat3& mat, int row, int col);
-mat2 Cofactor(const mat2& mat);
+mat2 Transpose(const mat2& m);					//get transposed matrix
+float Determinant(const mat2& m);				//get eterminant of matrix
+mat2 Minor(const mat2& mat);					//get minor of matrix
+mat2 Cut(const mat3& mat, int row, int col);	//get matrix without specific row and column
+mat2 Cofactor(const mat2& mat);					//get cofactor of matrix
+mat2 Adjugate(const mat2& mat);					//get adjugate matrix
+mat2 Inv(const mat2& mat);						//get inversed matrix
 
 //mat3
 mat3 Transpose(const mat3& m);
 mat3 Minor(const mat3& mat);
 mat3 Cofactor(const mat3& mat);
+mat3 Cut(const mat4& mat, int row, int col);
 float Determinant(const mat3& m);
+mat3 Adjugate(const mat3& mat);
+mat3 Inv(const mat3& mat);
+
 //mat4
 mat4 Transpose(const mat4& m);
+mat4 Minor(const mat4& mat);
+mat4 Cofactor(const mat4& mat);
+float Determinant(const mat4& mat);
+mat4 Adjugate(const mat4& mat);
+mat4 Inv(const mat4& mat);
+mat4 Translation(float x, float y, float z);
+mat4 Translation(const vec3& pos);
+vec3 GetTranslation(const mat4& mat);
+mat4 Scale(float x, float y, float z);
+mat4 Scale(const vec3& vec);
+vec3 GetScale(const mat4& mat);
+
+mat4 Rot(float pitch, float yaw, float roll);
+mat3 Rot3x3(float pitch, float yaw, float roll);
+
+mat4 ZRot(float angle);
+mat3 ZRot3x3(float angle);
+
+mat4 XRot(float angle);
+mat3 XRot3x3(float angle);
+
+mat4 YRot(float angle);
+mat3 YRot3x3(float angle);
 
 #endif
 
