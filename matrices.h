@@ -149,13 +149,17 @@ mat4 Cofactor(const mat4& mat);
 float Determinant(const mat4& mat);
 mat4 Adjugate(const mat4& mat);
 mat4 Inv(const mat4& mat);
+
+//matrix transformations
+//translation
 mat4 Translation(float x, float y, float z);
 mat4 Translation(const vec3& pos);
 vec3 GetTranslation(const mat4& mat);
+//scale
 mat4 Scale(float x, float y, float z);
 mat4 Scale(const vec3& vec);
 vec3 GetScale(const mat4& mat);
-
+//rotate
 mat4 Rot(float pitch, float yaw, float roll);
 mat3 Rot3x3(float pitch, float yaw, float roll);
 
@@ -168,7 +172,25 @@ mat3 XRot3x3(float angle);
 mat4 YRot(float angle);
 mat3 YRot3x3(float angle);
 
-#endif
+// rotate around given axis
+mat4 AxisAngle(const vec3& axis, float angle);
+mat3 AxisAngle3x3(const vec3& axis, float angle);
 
+//multiply vec and mat
+vec3 MultiplyPoint(const vec3& vec, const mat4& mat);
+vec3 MultiplyVector(const vec3& vec, const mat4& mat);
+vec3 MultiplyVector(const vec3& vec, const mat3& mat);
+
+//transform
+mat4 Transform(const vec3& scale, const vec3& eulerRot, const vec3& translate);
+mat4 Transform(const vec3& scale, const vec3& rotAxis, float rotAngle, const vec3& translate);
+
+//view
+mat4 LookAt(const vec3& pos, const vec3& trg, const vec3& up);
+
+//projection
+mat4 Projection(float fov, float aspect, float zNear, float zFar);
+mat4 Ortho(float left, float right, float bottom,float top, float zNear, float zFar);
+#endif
 
 

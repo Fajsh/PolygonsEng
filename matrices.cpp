@@ -253,6 +253,8 @@ mat4 Inv(const mat4& mat)
 	return Adjugate(mat) * (1.0f / det);
 }
 
+//matrix transformations
+//translation
 mat4 Translation(float x, float y, float z)
 {
 	return mat4(
@@ -262,7 +264,6 @@ mat4 Translation(float x, float y, float z)
 		x, y, z, 1.0f
 	);
 }
-
 mat4 Translation(const vec3& pos)
 {
 	return mat4(
@@ -272,12 +273,11 @@ mat4 Translation(const vec3& pos)
 		pos.x, pos.y, pos.z, 1.0f
 	);
 }
-
 vec3 GetTranslation(const mat4& mat)
 {
 	return vec3(mat._41,mat._42,mat._43);
 }
-
+//scale
 mat4 Scale(float x, float y, float z)
 {
 	return mat4(
@@ -287,7 +287,6 @@ mat4 Scale(float x, float y, float z)
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 }
-
 mat4 Scale(const vec3& vec)
 {
 	return mat4(
@@ -297,22 +296,19 @@ mat4 Scale(const vec3& vec)
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 }
-
 vec3 GetScale(const mat4& mat)
 {
 	return vec3(mat._11,mat._22,mat._33);
 }
-
+//rotate
 mat4 Rot(float pitch, float yaw, float roll)
 {
 	return ZRot(roll) * XRot(pitch) * YRot(yaw);
 }
-
 mat3 Rot3x3(float pitch, float yaw, float roll)
 {
 	return ZRot3x3(roll) * XRot3x3(pitch) * YRot3x3(yaw);
 }
-
 mat4 ZRot(float angle)
 {
 	angle = DEG2RAD(angle);
@@ -323,7 +319,6 @@ mat4 ZRot(float angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 }
-
 mat3 ZRot3x3(float angle)
 {
 	angle = DEG2RAD(angle);
@@ -333,7 +328,6 @@ mat3 ZRot3x3(float angle)
 		0.0f, 0.0f, 1.0f
 	);
 }
-
 mat4 XRot(float angle)
 {
 	angle = DEG2RAD(angle);
@@ -344,7 +338,6 @@ mat4 XRot(float angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 }
-
 mat3 XRot3x3(float angle)
 {
 	angle = DEG2RAD(angle);
@@ -354,7 +347,6 @@ mat3 XRot3x3(float angle)
 		0.0f, -sinf(angle), cosf(angle)
 	);
 }
-
 mat4 YRot(float angle)
 {
 	angle = DEG2RAD(angle);
@@ -365,7 +357,6 @@ mat4 YRot(float angle)
 		0.0f, 0.0f, 0.0f, 1.0f
 	);
 }
-
 mat3 YRot3x3(float angle)
 {
 	angle = DEG2RAD(angle);
@@ -375,3 +366,133 @@ mat3 YRot3x3(float angle)
 		sinf(angle), 0.0f, cosf(angle)
 	);
 }
+// rotate around given axis
+mat4 AxisAngle(const vec3& axis, float angle)
+{
+	angle = DEG2RAD(angle);
+	float c = cosf(angle);
+	float s = sinf(angle);
+	float t = 1.0f - cosf(angle);
+
+	float x = axis.x;
+	float y = axis.y;
+	float z = axis.z;
+	if (!CMP(MagSq(axis), 1.0f))
+	{
+		float inv_len = 1.0f / Mag(axis);
+		x *= inv_len;
+		y *= inv_len;
+		z *= inv_len;
+	}
+	return mat4(
+		t * (x * x) + c, t * x * y + s * z, t * x * z - s * y, 0.0f,
+		t * x * y + s * z, t * (y * y) + c, t * y * z + s * x, 0.0f,
+		t * x * z + s * y, t * y * z - s * x, t * (z * z) + c, 0.0f,
+		0.0f, 0.0f, 0.0f, 1.0f
+	);
+}
+mat3 AxisAngle3x3(const vec3& axis, float angle)
+{
+	angle = DEG2RAD(angle);
+	float c = cosf(angle);
+	float s = sinf(angle);
+	float t = 1.0f - cosf(angle);
+
+	float x = axis.x;
+	float y = axis.y;
+	float z = axis.z;
+	if (!CMP(MagSq(axis), 1.0f))
+	{
+		float inv_len = 1.0f / Mag(axis);
+		x *= inv_len;
+		y *= inv_len;
+		z *= inv_len;
+	}
+	return mat3(
+		t * (x * x) + c, t * x * y + s * z, t * x * z - s * y,
+		t * x * y + s * z, t * (y * y) + c, t * y * z + s * x,
+		t * x * z + s * y, t * y * z - s * x, t * (z * z) + c
+	);
+}
+//multiply vec and mat
+vec3 MultiplyPoint(const vec3& vec, const mat4& mat)
+{
+	vec3 res;
+	res.x = vec.x * mat._11 + vec.y * mat._21 + vec.z * mat._31 + 1.0f * mat._41;
+	res.y = vec.x * mat._12 + vec.y * mat._22 + vec.z * mat._32 + 1.0f * mat._42;
+	res.z = vec.x * mat._13 + vec.y * mat._23 + vec.z * mat._33 + 1.0f * mat._43;
+	return res;
+}
+vec3 MultiplyVector(const vec3& vec, const mat4& mat)
+{
+	vec3 res;
+	res.x = vec.x * mat._11 + vec.y * mat._21 + vec.z * mat._31 + 0.0f * mat._41;
+	res.y = vec.x * mat._12 + vec.y * mat._22 + vec.z * mat._32 + 0.0f * mat._42;
+	res.z = vec.x * mat._13 + vec.y * mat._23 + vec.z * mat._33 + 0.0f * mat._43;
+	return res;
+}
+vec3 MultiplyVector(const vec3& vec, const mat3& mat)
+{
+	vec3 res;
+	res.x = Dot(vec, vec3(mat._11, mat._21, mat._31));
+	res.y = Dot(vec, vec3(mat._12, mat._22, mat._32));
+	res.z = Dot(vec, vec3(mat._13, mat._23, mat._33));
+	return res;
+}
+//transform
+mat4 Transform(const vec3& scale, const vec3& eulerRot, const vec3& translate)
+{
+	return Scale(scale) * Rot(eulerRot.x, eulerRot.y, eulerRot.z) * Translation(translate);
+}
+mat4 Transform(const vec3& scale, const vec3& rotAxis, float rotAngle, const vec3& translate)
+{
+	return Scale(scale) * AxisAngle(rotAxis, rotAngle) * Translation(translate);
+}
+//view
+mat4 LookAt(const vec3& pos, const vec3& trg, const vec3& up)
+{
+	vec3 forward = Nomd(trg - pos);
+	vec3 right = Nomd(Cross(up, forward));
+	vec3 newUp = Cross(forward, right);
+
+	return mat4(
+		right.x, newUp.x, forward.x, 0.0f,
+		right.y, newUp.y, forward.y, 0.0f,
+		right.z, newUp.z, forward.z, 0.0f,
+		-Dot(right, pos), -Dot(newUp, pos),
+		-Dot(forward, pos), 1.0f
+	);
+}
+
+mat4 Projection(float fov, float aspect, float zNear, float zFar)
+{
+	float tanHalfFov = tanf(DEG2RAD((fov * 0.5f)));
+	float fovY = 1.0f / tanHalfFov;
+	float fovX = fovY / aspect;
+	mat4 res;
+	res._11 = fovX;
+	res._22 = fovY;
+	res._33 = zFar / (zFar - zNear);
+	res._34 = 1.0f;
+	res._43 = -zNear * res._33;
+	res._44 = 0.0f;
+	return res;
+}
+
+mat4 Ortho(float left, float right, float bottom, float top, float zNear, float zFar)
+{
+	float _11 = 2.0f / (right - left);
+	float _22 = 2.0f / (top - bottom);
+	float _33 = 1.0f / (zFar - zNear);
+	float _41 = (left + right) / (left - right);
+	float _42 = (top + bottom) / (bottom - top);
+	float _43 = (zNear) / (zNear - zFar);
+
+	return mat4(
+		_11, 0.0f, 0.0f, 0.0f,
+		0.0f, _22, 0.0f, 0.0f,
+		0.0f, 0.0f, _33, 0.0f,
+		_41, _42, _43, 1.0f
+	);
+}
+
