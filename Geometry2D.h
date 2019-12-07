@@ -7,6 +7,9 @@
 #define CircleLine(circle, line) \ LineCircle(line,circle)
 #define RectangleLine(rectangle, line) \ LineRectangle(line,rectangle)
 #define OrientedRectangleLine(rectangle, line) \ LineOrientedRectangle(line,rectangle)
+#define RectangleCircle(rectangle, circle) \ CircleRectangle(circle, rectangle)
+#define OrientedRectangleCircle(rectangle, circle) \ CircleOrientedRectangle(circle,rectangle)
+#define OrientedRectangleRectangle(oriented, regular) \ RectangleOrientedRectangle(regular,oriented)
 
 
 typedef vec2 Point2D;
@@ -45,8 +48,11 @@ typedef struct OrientedRectangle
 	inline OrientedRectangle(const Point2D& p, const vec2& e, float r) : pos(p), halfExtents(e), rot(r) {}
 }OrientedRectangle;
 
-
-
+typedef struct Interval2D
+{
+	float min;
+	float max;
+}Interval2D;
 
 //Methods
 //line2d
@@ -68,4 +74,21 @@ bool PointInOrientedRectangle(const Point2D& p, const OrientedRectangle& r);
 bool LineCircle(const Line2D& l, const Circle& c);
 bool LineRectangle(const Line2D& l, const Rectangle2D& r);
 bool LineOrientedRectangle(const Line2D& l, const OrientedRectangle& r);
+
+
+
+//collisions
+bool CircleCircle(const Circle& c1, const Circle& c2);
+bool CircleRectangle(const Circle& c, const Rectangle2D& r);
+bool CircleOrientedRectangle(const Circle& c, const OrientedRectangle& r);
+bool RectangleRectangle(const Rectangle2D& r1, const Rectangle2D& r2);
+//collisions - Separating Axis Theorem
+Interval2D getInterval(const Rectangle2D& rect, const vec2& axis);
+bool OverlapOnAxis(const Rectangle2D& r1, const Rectangle2D& r2, const vec2& axis);
+bool RectangleRectangleSAT(const Rectangle2D& r1, const Rectangle2D& r2);
+Interval2D getInterval(const OrientedRectangle& rect, const vec2& axis);
+bool OverlapOnAxis(const Rectangle2D& r1, const OrientedRectangle& r2, const vec2& axis);
+bool RectangleOrientedRectangle(const Rectangle2D& r1, const OrientedRectangle r2);
+bool OrientedRectangleOrientedRectangle(const OrientedRectangle& r1, const OrientedRectangle& r2);
+
 #endif
