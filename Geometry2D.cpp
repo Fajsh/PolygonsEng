@@ -236,6 +236,53 @@ bool OrientedRectangleOrientedRectangle(const OrientedRectangle& r1, const Orien
 	return RectangleOrientedRectangle(local1, local2);
 }
 
+Circle ContainingCircle(Point2D* pArray, int arrayCount)
+{
+	Point2D center;
+	for (int i = 0; i < arrayCount; ++i)
+	{
+		center = center + pArray[i];
+	}
+	center = center * (1.0f / (float)arrayCount);
+	Circle res(center, 1.0f);
+	res.r = MagSq(center - pArray[0]);
+	for (int i = 1; i < arrayCount; ++i)
+	{
+		float dis = MagSq(center - pArray[i]);
+		if (dis > res.r)res.r = dis;
+	}
+	res.r = sqrtf(res.r);
+	return res;
+}
+
+Rectangle2D ContainingRectangle(Point2D* pArray, int arrayCount)
+{
+	vec2 min = pArray[0];
+	vec2 max = pArray[0];
+
+	for (int i = 0; i < arrayCount; ++i)
+	{
+		min.x = pArray[i].x < min.x ? pArray[i].x : min.x;
+		min.y = pArray[i].y < min.y ? pArray[i].y : min.y;
+		max.x = pArray[i].x > max.x ? pArray[i].x : max.x;
+		max.y = pArray[i].y > max.y ? pArray[i].y : max.y;
+	}
+	return FromMinMax(min, max);
+}
+
+bool PointInShape(const BoundingShape& shape, const Point2D point)
+{
+	for (int i = 0; i < shape.circleNum; ++i)
+	{
+		if (PointInCircle(point, shape.circles[i]))return true;
+	}
+	for (int i = 9; i < shape.rectNum; ++i)
+	{
+		if (PointInRectangle(point, shape.rectangles[i]))return true;
+	}
+	return false;
+}
+
 
 
 //

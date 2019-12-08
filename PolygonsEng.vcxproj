@@ -125,6 +125,7 @@
   <ItemGroup>
     <ClCompile Include="Geometry2D.cpp" />
     <ClCompile Include="matrices.cpp" />
+    <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="vectors.cpp" />
   </ItemGroup>
@@ -132,6 +133,7 @@
     <ClInclude Include="Compare.h" />
     <ClInclude Include="Geometry2D.h" />
     <ClInclude Include="matrices.h" />
+    <ClInclude Include="QuadTree.h" />
     <ClInclude Include="vectors.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
