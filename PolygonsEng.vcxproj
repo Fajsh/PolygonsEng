@@ -124,6 +124,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Geometry2D.cpp" />
+    <ClCompile Include="Geometry3D.cpp" />
     <ClCompile Include="matrices.cpp" />
     <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="test.cpp" />
@@ -132,6 +133,7 @@
   <ItemGroup>
     <ClInclude Include="Compare.h" />
     <ClInclude Include="Geometry2D.h" />
+    <ClInclude Include="Geometry3D.h" />
     <ClInclude Include="matrices.h" />
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="vectors.h" />
