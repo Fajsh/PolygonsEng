@@ -45,3 +45,118 @@ float PlaneEquation(const Point& pt, const Plane& plane)
 {
 	return Dot(pt, plane.normal) - plane.distance;
 }
+
+bool PointInSphere(const Point& point, const Sphere& sphere)
+{
+	float magSq = MagSq(point - sphere.position);
+	float radSq = sphere.radius * sphere.radius;
+	return magSq < radSq;
+}
+
+Point ClosestPoint(const Sphere& sphere, const Point& point)
+{
+	vec3 sphereToPoint = point - sphere.position;
+	Nome(sphereToPoint);
+	sphereToPoint = sphereToPoint * sphere.radius;
+	return sphereToPoint + sphere.position;
+}
+
+bool PointInAABB(const Point& point, const AABB& aabb)
+{
+	Point min = GetMin(aabb);
+	Point max = GetMax(aabb);
+	if (point.x < min.x || point.y < min.y || point.z < min.z)return false;
+	if (point.x > max.x || point.y > max.y || point.z > max.z)return false;
+	return true;
+}
+
+Point ClosestPoint(const AABB& aabb, const Point& point)
+{
+	Point res = point;
+	Point min = GetMin(aabb);
+	Point max = GetMax(aabb);
+	res.x = (res.x < min.x) ? min.x : res.x;
+	res.y = (res.y < min.y) ? min.y : res.y;
+	res.z = (res.z < min.z) ? min.z : res.z;
+
+	res.x = (res.x > max.x) ? max.x : res.x;
+	res.y = (res.y > max.y) ? max.y : res.y;
+	res.z= (res.z > max.z) ? max.z : res.z;
+}
+
+bool PointInOBB(const Point& point, const OBB& obb)
+{
+	vec3 dir = point - obb.position;
+	for (int i = 0; i < 3;++i)
+	{
+		const float* orientation = &obb.orientation.asArray[i * 3];
+		vec3 axis(orientation[0], orientation[1], orientation[2]);
+		float distance = Dot(dir, axis);
+		if (distance > obb.size.asArray[i])return false;
+		if (distance < -obb.size.asArray[i])return false;
+	}
+	return true;
+}
+
+Point ClosestPoint(const OBB& obb, const Point& point)
+{
+	Point res = obb.position;
+	vec3 dir = point - obb.position;
+	for (int i = 0; i < 3; ++i)
+	{
+		const float* orientation = &obb.orientation.asArray[i * 3];
+		vec3 axis(orientation[0], orientation[1], orientation[2]);
+		float distance = Dot(dir, axis);
+
+		if (distance > obb.size.asArray[i])distance = obb.size.asArray[i];
+		if (distance < -obb.size.asArray[i])distance = -obb.size.asArray[i];
+		res = res + (axis * distance);
+	}
+	return res;
+}
+
+bool PointOnPlane(const Point& point, const Plane& plane)
+{
+	float dot = Dot(point, plane.normal);
+	return dot - plane.distance == 0.0f;
+}
+
+Point ClosestPoint(const Plane& plane, const Point& point)
+{
+	float dot = Dot(plane.normal, point);
+	float dist = dot - plane.distance;
+	return point - plane.normal * dist;
+}
+
+bool PointOnLine(const Point& point, const Line& line)
+{
+	Point closest = ClosestPoint(line, point);
+	float distanceSq = MagSq(closest - point);
+	return distanceSq == 0.0f;
+}
+
+Point ClosestPoint(const Line& line, const Point& point)
+{
+	vec3 lVec = line.end - line.start;
+	float t = Dot(point - line.start, lVec) / Dot(lVec, lVec);
+	t = fmaxf(t, 0.0f);
+	t = fminf(t, 1.0f);
+	return line.start + lVec * t;
+}
+
+bool PointOnRay(const Point& point, const Ray& ray)
+{
+	if (point == ray.origin)return true;
+	vec3 norm = point - ray.origin;
+	Nomd(norm);
+	float diff = Dot(norm, ray.dir);
+	return diff == 1.0f;
+}
+
+Point ClosestPoint(const Ray& ray, const Point& point)
+{
+	float t = Dot(point - ray.origin, ray.dir);
+	t = fmaxf(t,0.0f);
+	return Point(ray.origin + ray.dir * t);
+}
+
