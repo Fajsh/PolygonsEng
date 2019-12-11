@@ -2,7 +2,7 @@
 #include <cmath>
 #include <cfloat>
 
-//Methods
+//********************methods********************
 //line
 float Len(const Line& line)
 {
@@ -45,14 +45,14 @@ float PlaneEquation(const Point& pt, const Plane& plane)
 {
 	return Dot(pt, plane.normal) - plane.distance;
 }
-
+//********************point tests********************
+//sphere
 bool PointInSphere(const Point& point, const Sphere& sphere)
 {
 	float magSq = MagSq(point - sphere.position);
 	float radSq = sphere.radius * sphere.radius;
 	return magSq < radSq;
 }
-
 Point ClosestPoint(const Sphere& sphere, const Point& point)
 {
 	vec3 sphereToPoint = point - sphere.position;
@@ -60,7 +60,7 @@ Point ClosestPoint(const Sphere& sphere, const Point& point)
 	sphereToPoint = sphereToPoint * sphere.radius;
 	return sphereToPoint + sphere.position;
 }
-
+//aabb
 bool PointInAABB(const Point& point, const AABB& aabb)
 {
 	Point min = GetMin(aabb);
@@ -69,7 +69,6 @@ bool PointInAABB(const Point& point, const AABB& aabb)
 	if (point.x > max.x || point.y > max.y || point.z > max.z)return false;
 	return true;
 }
-
 Point ClosestPoint(const AABB& aabb, const Point& point)
 {
 	Point res = point;
@@ -83,7 +82,7 @@ Point ClosestPoint(const AABB& aabb, const Point& point)
 	res.y = (res.y > max.y) ? max.y : res.y;
 	res.z= (res.z > max.z) ? max.z : res.z;
 }
-
+//obb
 bool PointInOBB(const Point& point, const OBB& obb)
 {
 	vec3 dir = point - obb.position;
@@ -97,7 +96,6 @@ bool PointInOBB(const Point& point, const OBB& obb)
 	}
 	return true;
 }
-
 Point ClosestPoint(const OBB& obb, const Point& point)
 {
 	Point res = obb.position;
@@ -114,27 +112,25 @@ Point ClosestPoint(const OBB& obb, const Point& point)
 	}
 	return res;
 }
-
+//plane
 bool PointOnPlane(const Point& point, const Plane& plane)
 {
 	float dot = Dot(point, plane.normal);
 	return dot - plane.distance == 0.0f;
 }
-
 Point ClosestPoint(const Plane& plane, const Point& point)
 {
 	float dot = Dot(plane.normal, point);
 	float dist = dot - plane.distance;
 	return point - plane.normal * dist;
 }
-
+//line
 bool PointOnLine(const Point& point, const Line& line)
 {
 	Point closest = ClosestPoint(line, point);
 	float distanceSq = MagSq(closest - point);
 	return distanceSq == 0.0f;
 }
-
 Point ClosestPoint(const Line& line, const Point& point)
 {
 	vec3 lVec = line.end - line.start;
@@ -143,7 +139,7 @@ Point ClosestPoint(const Line& line, const Point& point)
 	t = fminf(t, 1.0f);
 	return line.start + lVec * t;
 }
-
+//ray
 bool PointOnRay(const Point& point, const Ray& ray)
 {
 	if (point == ray.origin)return true;
@@ -152,11 +148,52 @@ bool PointOnRay(const Point& point, const Ray& ray)
 	float diff = Dot(norm, ray.dir);
 	return diff == 1.0f;
 }
-
 Point ClosestPoint(const Ray& ray, const Point& point)
 {
 	float t = Dot(point - ray.origin, ray.dir);
 	t = fmaxf(t,0.0f);
 	return Point(ray.origin + ray.dir * t);
+}
+
+//********************shape collisions********************
+bool SphereSphere(const Sphere& s1, const Sphere& s2)
+{
+	float radSum = s1.radius + s2.radius;
+	float sqDist = MagSq(s1.position - s2.position);
+	return sqDist < radSum * radSum;
+}
+bool SphereAABB(const Sphere& sphere, const AABB& aabb)
+{
+	Point closestPoint = ClosestPoint(aabb, sphere.position);
+	float distSq = MagSq(sphere.position - closestPoint);
+	float radiusSq = sphere.radius * sphere.radius;
+	return distSq < radiusSq;
+}
+bool SphereOBB(const Sphere& sphere, const OBB& obb)
+{
+	Point closestPoint = ClosestPoint(obb, sphere.position);
+	float distSq = MagSq(sphere.position - closestPoint);
+	float radiusSq = sphere.radius * sphere.radius;
+	return distSq < radiusSq;
+}
+bool SpherePlane(const Sphere& sphere, const Plane& plane)
+{
+	Point closestPoint = ClosestPoint(plane, sphere.position);
+	float distSq = MagSq(sphere.position - closestPoint);
+	float radiusSq = sphere.radius * sphere.radius;
+	return distSq < radiusSq;
+}
+
+bool AABBAABB(const AABB& aabb1, const AABB& aabb2)
+{
+	Point aMax = GetMax(aabb1);
+	Point aMin = GetMin(aabb1);
+
+	Point bMax = GetMax(aabb2);
+	Point bMin = GetMin(aabb2);
+
+	return (aMin.x <= bMax.x && aMax.x >= bMin.x) &&
+		(aMin.y <= bMax.y && aMax.y >= bMin.y) &&
+		(aMin.z <= bMax.z && aMax.z >= bMin.z);
 }
 

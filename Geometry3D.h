@@ -3,6 +3,12 @@
 #include "vectors.h"
 #include "matrices.h"
 
+#define AABBSphere(aabb, sphere) \ SphereAABB(sphere, aabb)
+#define OBBSphere(obb, sphere) \ SphereObb(sphere, obb)
+#define PlaneSphere(plane, sphere) \ SpherePlane(sphere, plane)
+
+//********************structs********************
+
 typedef vec3 Point;
 
 typedef struct Line
@@ -73,25 +79,24 @@ typedef struct Triangle
 	inline Triangle(const Point& p1, const Point& p2, const Point& p3) : a(p1), b(p2), c(p3) {}
 }Triangle;
 
-//Methods
+//********************methods********************
 //line
 
 float Len(const Line& line);		//get line length
 float LenSq(const Line& line);		//get squared line length
 
 //ray
-Ray FromPoints(const Point& from, const Point& to);
+Ray FromPoints(const Point& from, const Point& to);	//construct ray from points
 
 //AABB
-vec3 GetMin(const AABB& aabb);
-vec3 GetMax(const AABB& aabb);
-AABB FromMinMax(const vec3& min, const vec3& max);
+vec3 GetMin(const AABB& aabb);				//get min of aabb
+vec3 GetMax(const AABB& aabb);				//get max of aabb
+AABB FromMinMax(const vec3& min, const vec3& max);	//construct aabb from min, max
 
 //plane
-float PlaneEquation(const Point& pt, const Plane& plane);
+float PlaneEquation(const Point& pt, const Plane& plane);	//return planeEq
 
-
-//point tests:
+//********************point tests********************
 //sphere
 bool PointInSphere(const Point& point, const Sphere& sphere);
 Point ClosestPoint(const Sphere& sphere, const Point& point);
@@ -111,5 +116,12 @@ Point ClosestPoint(const Line& line, const Point& point);
 bool PointOnRay(const Point& point, const Ray& ray);
 Point ClosestPoint(const Ray& ray, const Point& point);
 
+//********************shape collisions********************
+
+bool SphereSphere(const Sphere& s1, const Sphere& s2);
+bool SphereAABB(const Sphere& sphere, const AABB& aabb);
+bool SphereOBB(const Sphere& sphere, const OBB& obb);
+bool SpherePlane(const Sphere& sphere, const Plane& plane);
+bool AABBAABB(const AABB& aabb1, const AABB& aabb2);
 
 #endif
