@@ -81,6 +81,7 @@ Point ClosestPoint(const AABB& aabb, const Point& point)
 	res.x = (res.x > max.x) ? max.x : res.x;
 	res.y = (res.y > max.y) ? max.y : res.y;
 	res.z= (res.z > max.z) ? max.z : res.z;
+	return res;
 }
 //obb
 bool PointInOBB(const Point& point, const OBB& obb)
@@ -195,5 +196,160 @@ bool AABBAABB(const AABB& aabb1, const AABB& aabb2)
 	return (aMin.x <= bMax.x && aMax.x >= bMin.x) &&
 		(aMin.y <= bMax.y && aMax.y >= bMin.y) &&
 		(aMin.z <= bMax.z && aMax.z >= bMin.z);
+}
+Interval GetInterval(const AABB& aabb, const vec3& axis)
+{
+	vec3 i = GetMin(aabb);
+	vec3 a = GetMax(aabb);
+	vec3 vertex[8] =
+	{
+		vec3(i.x, a.y, a.z),
+		vec3(i.x, a.y, i.z),
+		vec3(i.x, i.y, a.z),
+		vec3(i.x, i.y, i.z),
+		vec3(a.x, a.y, a.z),
+		vec3(a.x, a.y, i.z),
+		vec3(a.x, i.y, a.z),
+		vec3(a.x, i.y, i.z)
+	};
+	Interval res;
+	res.min = res.max = Dot(axis, vertex[0]);
+
+	for (int i = 1; i < 8; ++i)
+	{
+		float projection = Dot(axis, vertex[i]);
+		res.min = (projection < res.min) ? projection : res.min;
+		res.max = (projection > res.max) ? projection : res.max;
+	}
+	return res;
+}
+Interval GetInterval(const OBB& obb, const vec3& axis)
+{
+	vec3 vertex[8];
+	vec3 C = obb.position;
+	vec3 E = obb.size;
+	const float* o = obb.orientation.asArray;
+	vec3 A[] =
+	{
+		vec3(o[0],o[1],o[2]),
+		vec3(o[3],o[4],o[5]),
+		vec3(o[6],o[7],o[8])
+	};
+	vertex[0] = C + A[0] * E[0] + A[1] * E[1] + A[2] * E[2];
+	vertex[1] = C - A[0] * E[0] + A[1] * E[1] + A[2] * E[2];
+	vertex[2] = C + A[0] * E[0] - A[1] * E[1] + A[2] * E[2];
+	vertex[3] = C + A[0] * E[0] + A[1] * E[1] - A[2] * E[2];
+	vertex[4] = C - A[0] * E[0] - A[1] * E[1] - A[2] * E[2];
+	vertex[5] = C + A[0] * E[0] - A[1] * E[1] - A[2] * E[2];
+	vertex[6] = C - A[0] * E[0] + A[1] * E[1] - A[2] * E[2];
+	vertex[7] = C - A[0] * E[0] - A[1] * E[1] + A[2] * E[2];
+
+	Interval res;
+	res.min = res.max = Dot(axis, vertex[0]);
+	for (int i = 1; i < 8; ++i)
+	{
+		float projection = Dot(axis, vertex[i]);
+		res.min = (projection < res.min) ? projection : res.min;
+		res.max = (projection > res.max) ? projection : res.max;
+	}
+	return res;
+}
+bool OverlapOnAxis(const AABB& aabb, const OBB& obb,const vec3& axis)
+{
+	Interval a = GetInterval(aabb, axis);
+	Interval b = GetInterval(obb, axis);
+	return((b.min <= a.max) && (a.min <= b.max));
+}
+bool AABBOBB(const AABB& aabb, const OBB& obb)
+{
+	const float* o = obb.orientation.asArray;
+	vec3 test[15] =
+	{
+		vec3(1,0,0),
+		vec3(0,1,0),
+		vec3(0,0,1),
+		vec3(o[0],o[1],o[2]),
+		vec3(o[3],o[4],o[5]),
+		vec3(o[6],o[7],o[8])
+	};
+	for (int i = 0; i < 3; ++i)
+	{
+		test[6 + i * 3 + 0] = Cross(test[i], test[0]);
+		test[6 + i * 3 + 1] = Cross(test[i], test[1]);
+		test[6 + i * 3 + 2] = Cross(test[i], test[2]);
+	}
+
+	for (int i = 0; i < 15; ++i)
+	{
+		if (!OverlapOnAxis(aabb, obb, test[i]))return false;
+	}
+	return true;
+}
+
+bool AABBPlane(const AABB& aabb, const Plane& plane)
+{
+	float pLen = aabb.size.x * fabsf(plane.normal.x) +
+		aabb.size.y * fabsf(plane.normal.y) +
+		aabb.size.z * fabsf(plane.normal.z);
+	float dot = Dot(plane.normal, aabb.position);
+	float dist = dot - plane.distance;
+	return fabsf(dist) <= pLen;
+}
+
+bool OverlapOnAxis(const OBB& obb1, const OBB& obb2, const vec3& axis)
+{
+	Interval a = GetInterval(obb1, axis);
+	Interval b = GetInterval(obb2, axis);
+	return((b.min <= a.max) && (a.min <= b.max));
+}
+
+bool OBBOBB(const OBB& obb1, const OBB& obb2)
+{
+	const float* o1 = obb1.orientation.asArray;
+	const float* o2 = obb2.orientation.asArray;
+	vec3 test[15] =
+	{
+		vec3(o1[0],o1[1],o1[2]),
+		vec3(o1[3],o1[4],o1[5]),
+		vec3(o1[6],o1[7],o1[8]),
+		vec3(o2[0],o2[1],o2[2]),
+		vec3(o2[3],o2[4],o2[5]),
+		vec3(o2[6],o2[7],o2[8])
+	};
+	for (int i = 0; i < 3; ++i)
+	{
+		test[6 + i * 3 + 0] = Cross(test[i], test[0]);
+		test[6 + i * 3 + 1] = Cross(test[i], test[1]);
+		test[6 + i * 3 + 2] = Cross(test[i], test[2]);
+	}
+	for (int i = 0; i < 15; ++i)
+	{
+		if (!OverlapOnAxis(obb1, obb2, test[i]))return false;
+	}
+	return true;
+}
+
+bool OBBPlane(const OBB& obb, const Plane& plane)
+{
+	const float* o = obb.orientation.asArray;
+	vec3 rot[] =
+	{
+		vec3(o[0],o[1],o[2]),
+		vec3(o[3],o[4],o[5]),
+		vec3(o[6],o[7],o[8])
+	};
+	vec3 normal = plane.normal;
+	float pLen = obb.size.x * fabsf(Dot(normal, rot[0])) +
+		obb.size.y * fabsf(Dot(normal, rot[1])) +
+		obb.size.z * fabsf(Dot(normal, rot[2]));
+	float dot = Dot(plane.normal, obb.position);
+	float dist = dot - plane.distance;
+	return fabsf(dist) <= pLen;
+}
+
+bool PlanePlane(const Plane& plane1, const Plane& plane2)
+{
+	vec3 d = Cross(plane1.normal, plane2.normal);
+	return Dot(d, d) != 0;
 }
 

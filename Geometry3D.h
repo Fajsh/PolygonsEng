@@ -6,6 +6,9 @@
 #define AABBSphere(aabb, sphere) \ SphereAABB(sphere, aabb)
 #define OBBSphere(obb, sphere) \ SphereObb(sphere, obb)
 #define PlaneSphere(plane, sphere) \ SpherePlane(sphere, plane)
+#define OBBAABB(obb, aabb) \ AABBOBB(aabb, obb)
+#define PlaneAABB(plane, aabb) \ AABBPlane(aabb, plane)
+#define PlaneOBB(plane, obb) \ OBBPlane(obb,plane)
 
 //********************structs********************
 
@@ -79,6 +82,12 @@ typedef struct Triangle
 	inline Triangle(const Point& p1, const Point& p2, const Point& p3) : a(p1), b(p2), c(p3) {}
 }Triangle;
 
+typedef struct Interval
+{
+	float min;
+	float max;
+}Interval;
+
 //********************methods********************
 //line
 
@@ -123,5 +132,17 @@ bool SphereAABB(const Sphere& sphere, const AABB& aabb);
 bool SphereOBB(const Sphere& sphere, const OBB& obb);
 bool SpherePlane(const Sphere& sphere, const Plane& plane);
 bool AABBAABB(const AABB& aabb1, const AABB& aabb2);
+
+Interval GetInterval(const AABB& aabb, const vec3& axis);	//helper function for AABB x OBB collision
+Interval GetInterval(const OBB& obb, const vec3& axis);		//helper function for AABB x OBB collision
+bool OverlapOnAxis(const AABB& aabb, const OBB& obb, const vec3& axis);	//check if given AABB and OBB overlap on given axis
+bool AABBOBB(const AABB& aabb, const OBB& obb);
+
+bool AABBPlane(const AABB& aabb, const Plane& plane);
+bool OverlapOnAxis(const OBB& obb1, const OBB& obb2, const vec3& axis);	//check if two given OBB's overlap on given axis
+bool OBBOBB(const OBB& obb1, const OBB& obb2);
+
+bool OBBPlane(const OBB& obb, const Plane& plane);
+bool PlanePlane(const Plane& plane1, const Plane& plane2);
 
 #endif
