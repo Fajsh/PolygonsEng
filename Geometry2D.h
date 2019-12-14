@@ -61,7 +61,7 @@ typedef struct BoundingShape
 	int rectNum;
 	Rectangle2D* rectangles;
 	inline BoundingShape() : circleNum(0), circles(0), rectNum(0), rectangles(0) {}
-};
+}BoundingShape;
 
 //Methods
 //line2d
