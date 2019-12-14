@@ -1,6 +1,7 @@
 #include "Geometry3D.h"
 #include <cmath>
 #include <cfloat>
+#include "Compare.h"
 
 //********************methods********************
 //line
@@ -352,4 +353,113 @@ bool PlanePlane(const Plane& plane1, const Plane& plane2)
 	vec3 d = Cross(plane1.normal, plane2.normal);
 	return Dot(d, d) != 0;
 }
+
+float Raycast(const Sphere& sphere, const Ray& ray)
+{
+	vec3 e = sphere.position - ray.origin;
+	float rSq = sphere.radius * sphere.radius;
+	float eSq = MagSq(e);
+	float a = Dot(e, ray.dir);
+	float bSq = eSq - (a * a);
+	float f = sqrt(rSq - bSq);
+	if (rSq - (eSq - (a * a)) < 0.0f)return -1;
+	else if (eSq < rSq)return a + f;
+	return a - f;
+}
+
+float Raycast(const AABB& aabb, const Ray& ray)
+{
+	vec3 min = GetMin(aabb);
+	vec3 max = GetMax(aabb);
+
+	float t1 = (min.x - ray.origin.x) / ray.dir.x;
+	float t2 = (max.x - ray.origin.x) / ray.dir.x;
+	float t3 = (min.y - ray.origin.y) / ray.dir.y;
+	float t4 = (max.y - ray.origin.y) / ray.dir.y;
+	float t5 = (min.z - ray.origin.z) / ray.dir.z;
+	float t6 = (max.z - ray.origin.z) / ray.dir.z;
+
+	float tmin = fmaxf(fmaxf(fminf(t1, t2), fminf(t3, t4)), fminf(t5, t6));
+	float tmax = fminf(fminf(fmaxf(t1, t2), fmaxf(t3, t4)), fmaxf(t5, t6));
+	if (tmax < 0)return -1;
+	if (tmin > tmax)return - 1;
+	if (tmin < 0.0f)return tmax;
+	return tmin;
+
+}
+
+float Raycast(const OBB& obb, const Ray& ray)
+{
+	const float* o = obb.orientation.asArray;
+	const float* size = obb.size.asArray;
+	vec3 X(o[0], o[1], o[2]);
+	vec3 Y(o[3], o[4], o[5]);
+	vec3 Z(o[6], o[7], o[8]);
+	vec3 p = obb.position - ray.origin;
+	vec3 f(Dot(X, ray.dir), Dot(Y, ray.dir), Dot(Z, ray.dir));
+	vec3 e(Dot(X, p), Dot(Y, p), Dot(Z, p));
+	float t[6] = { 0,0,0,0,0,0 };
+	for (int i = 0; i < 3; ++i)
+	{
+		if (CMP(f[i], 0))
+		{
+			if (-e[i] - size[i] > 0 || -e[i] + size[i] < 0)return -1;
+			f[i] = 0.00001f;
+		}
+		t[i * 2 + 0] = (e[i] + size[i]) / f[i];
+		t[i * 2 + 1] = (e[i] - size[i]) / f[i];
+	}
+	float tmin = fmaxf(fmaxf(fminf(t[0], t[1]), fminf(t[2], t[3])), fminf(t[4], t[5]));
+	float tmax = fminf(fminf(fmaxf(t[0], t[1]), fmaxf(t[2], t[3])), fmaxf(t[4], t[5]));
+	if (tmax < 0)return -1;
+	if (tmin > tmax)return -1;
+	if (tmin < 0.0f)return tmax;
+	return tmin;
+}
+
+float Raycast(const Plane& plane, const Ray& ray)
+{
+	float nd = Dot(ray.dir, plane.normal);
+	float pn = Dot(ray.origin, plane.normal);
+	if (nd >= 0.0f)return -1;
+	float t = (plane.distance - pn) / nd;
+	if (t >= 0.0f)return t;
+	return -1;
+}
+
+bool Linetest(const Sphere& sphere, const Line& line)
+{
+	Point closest = ClosestPoint(line, sphere.position);
+	float distSq = MagSq(sphere.position - closest);
+	return distSq <= (sphere.radius * sphere.radius);
+}
+
+bool Linetest(const AABB& aabb, const Line& line)
+{
+	Ray ray;
+	ray.origin = line.start;
+	ray.dir = Nomd(line.end - line.start);
+	float t = Raycast(aabb, ray);
+	return t >= 0 && t * t <= LenSq(line);
+}
+
+bool Linetest(const OBB& obb, const Line& line)
+{
+	Ray ray;
+	ray.origin = line.start;
+	ray.dir = Nomd(line.end - line.start);
+	float t = Raycast(obb, ray);
+	return t >= 0 && t * t <= LenSq(line);
+}
+
+bool Linetest(const Plane& plane, const Line& line)
+{
+	vec3 ab = line.end - line.start;
+	float nA = Dot(plane.normal, line.start);
+	float nAB = Dot(plane.normal, ab);
+	float t = (plane.distance - nA) / nAB;
+	return t >= 0.0f && t <= 1.0f;
+}
+
+
 
