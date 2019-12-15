@@ -461,5 +461,288 @@ bool Linetest(const Plane& plane, const Line& line)
 	return t >= 0.0f && t <= 1.0f;
 }
 
+bool PointInTriangle(const Point& point, const Triangle& triangle)
+{
+	vec3 a = triangle.a - point;
+	vec3 b = triangle.b - point;
+	vec3 c = triangle.c - point;
+
+	vec3 normPBC = Cross(b, c);
+	vec3 normPCA = Cross(c, a);
+	vec3 normPAB = Cross(a, b);
+	if (Dot(normPBC, normPCA) < 0.0f)return false;
+	else if (Dot(normPBC, normPAB) < 0.0f)return false;
+	return true;
+
+}
+
+Plane FromTriangle(const Triangle& t)
+{
+	Plane res;
+	res.normal = Nomd(Cross(t.b - t.a, t.c - t.a));
+	res.distance = Dot(res.normal, t.a);
+	return res;
+}
+
+Point ClosestPoint(const Triangle& t, const Point& p)
+{
+	Plane plane = FromTriangle(t);
+	if (PointInTriangle(p, t))return p;
+	Point c1 = ClosestPoint(Line(t.a, t.b), p);
+	Point c2 = ClosestPoint(Line(t.b, t.c), p);
+	Point c3 = ClosestPoint(Line(t.c, t.a), p);
+	float magSq1 = MagSq(p - c1);
+	float magSq2 = MagSq(p - c2);
+	float magSq3 = MagSq(p - c3);
+
+	if (magSq1 < magSq2 && magSq1 < magSq3)return c1;
+	else if (magSq2 < magSq1 && magSq2 < magSq3)return c2;
+	return c3;
+}
+
+bool TriangleSphere(const Triangle& t, const Sphere& s)
+{
+	Point closest = ClosestPoint(t, s.position);
+	float magSq = MagSq(closest - s.position);
+	return magSq <= (s.radius * s.radius);
+}
+
+Interval GetInterval(const Triangle& triangle, const vec3& axis)
+{
+	Interval res;
+	res.min = Dot(axis, triangle.points[0]);
+	res.max = res.min;
+
+	for (int i = 1; i < 3; ++i)
+	{
+		float val = Dot(axis, triangle.points[i]);
+		res.min = fminf(res.min, val);
+		res.max = fmaxf(res.max, val);
+	}
+	return res;
+}
+
+bool OverlapOnAxis(const AABB& aabb, const Triangle& triangle, const vec3& axis)
+{
+	Interval a = GetInterval(aabb, axis);
+	Interval b = GetInterval(triangle, axis);
+	return((b.min <= a.max) && (a.min <= b.max));
+}
+
+bool TriangleAABB(const Triangle& t, const AABB& a)
+{
+	vec3 f0 = t.b - t.a;
+	vec3 f1 = t.c - t.b;
+	vec3 f2 = t.a - t.c;
+	vec3 u0(1.0f, 0.0f, 0.0f);
+	vec3 u1(0.0f, 1.0f, 0.0f);
+	vec3 u2(0.0f, 0.0f, 1.0f);
+	vec3 test[13] =
+	{
+		u0,
+		u1,
+		u2,
+		Cross(f0,f1),
+		Cross(u0,f0),
+		Cross(u0,f1),
+		Cross(u0,f2),
+		Cross(u1,f0),
+		Cross(u1,f1),
+		Cross(u1,f2),
+		Cross(u2,f0),
+		Cross(u2,f1),
+		Cross(u2,f2)
+	};
+	for (int i = 0; i < 13; ++i)
+	{
+		if (!OverlapOnAxis(a, t, test[i]))return false;
+	}
+	return true;
+}
+
+bool OverlapOnAxis(const OBB& obb, const Triangle& triangle, const vec3& axis)
+{
+	Interval a = GetInterval(obb, axis);
+	Interval b = GetInterval(triangle, axis);
+	return((b.min <= a.max) && (a.min <= b.max));
+}
+
+bool TriangleOBB(const Triangle& t, const OBB& obb)
+{
+	vec3 f0 = t.b - t.a;
+	vec3 f1 = t.c - t.b;
+	vec3 f2 = t.a - t.c;
+
+	const float* orientation = obb.orientation.asArray;
+	vec3 u0(orientation[0], orientation[1], orientation[2]);
+	vec3 u1(orientation[3], orientation[4], orientation[5]);
+	vec3 u2(orientation[6], orientation[7], orientation[8]);
+
+	vec3 test[13] =
+	{
+		u0,
+		u1,
+		u2,
+		Cross(f0,f1),
+		Cross(u0,f0),
+		Cross(u0,f1),
+		Cross(u0,f2),
+		Cross(u1,f0),
+		Cross(u1,f1),
+		Cross(u1,f2),
+		Cross(u2,f0),
+		Cross(u2,f1),
+		Cross(u2,f2)
+	};
+	for (int i = 0; i < 13; ++i)
+	{
+		if (!OverlapOnAxis(obb, t, test[i]))return false;
+	}
+	return true;
+}
+
+bool TrianglePlane(const Triangle& t, const Plane& p)
+{
+	float side1 = PlaneEquation(t.a, p);
+	float side2 = PlaneEquation(t.b, p);
+	float side3 = PlaneEquation(t.c, p);
+	if (CMP(side1, 0) && CMP(side2, 0) && CMP(side3, 0))return true;
+	if (side1 > 0 && side2 > 0 && side3 > 0)return false;
+	if (side1 < 0 && side2 < 0 && side3 < 0)return false;
+	return true;
+}
+
+bool OverlapOnAxis(const Triangle& t1, const Triangle& t2, const vec3& axis)
+{
+	Interval a = GetInterval(t1, axis);
+	Interval b = GetInterval(t2, axis);
+	return((b.min <= a.max) && (a.min <= b.max));
+}
+
+bool TriangleTriangle(const Triangle& t1, const Triangle& t2)
+{
+	vec3 t1_f0 = t1.b - t1.a;
+	vec3 t1_f1 = t1.c - t1.b;
+	vec3 t1_f2 = t1.a - t1.c;
+
+	vec3 t2_f0 = t2.b - t2.a;
+	vec3 t2_f1 = t2.c - t2.b;
+	vec3 t2_f2 = t2.a - t2.c;
+
+	vec3 axisToTest[] =
+	{
+		Cross(t1_f0,t1_f1),
+		Cross(t2_f0,t2_f1),
+
+		Cross(t2_f0,t1_f0),
+		Cross(t2_f0,t1_f1),
+
+		Cross(t2_f0,t2_f2),
+		Cross(t2_f1,t1_f0),
+
+		Cross(t2_f1,t1_f1),
+		Cross(t2_f1,t1_f2),
+
+		Cross(t2_f2,t1_f0),
+		Cross(t2_f2,t1_f1),
+		Cross(t2_f2,t1_f2)
+	};
+
+	for (int i = 0; i < 11; ++i)
+	{
+		if (!OverlapOnAxis(t1, t2, axisToTest[i]))return false;
+	}
+	return true;
+}
+
+vec3 SatCrossEdge(const vec3& a, const vec3& b, const vec3& c, const vec3& d)
+{
+	vec3 ab = a - b;
+	vec3 cd = c - d;
+	vec3 res = Cross(ab, cd);
+	if (!CMP(MagSq(res), 0))return res;
+	else
+	{
+		vec3 axis = Cross(ab, c - a);
+		res = Cross(ab, axis);
+		if (!CMP(MagSq(res), 0))return res;
+	}
+	return vec3();
+}
+
+bool TriangleTriangleRobust(const Triangle& t1, const Triangle& t2)
+{
+	vec3 axisToTest[] =
+	{
+		SatCrossEdge(t1.a,t1.b,t1.b,t1.c),
+		SatCrossEdge(t2.a,t2.b,t2.b,t2.c),
+
+		SatCrossEdge(t2.a,t2.b,t1.a,t1.b),
+		SatCrossEdge(t2.a,t2.b,t1.b,t1.c),
+		SatCrossEdge(t2.a,t2.b,t1.c,t1.a),
+
+		SatCrossEdge(t2.b,t2.c,t1.a,t1.b),
+		SatCrossEdge(t2.b,t2.c,t1.b,t1.c),
+		SatCrossEdge(t2.b,t2.c,t1.c,t1.a),
+
+		SatCrossEdge(t2.c,t2.a,t1.a,t1.b),
+		SatCrossEdge(t2.c,t2.a,t1.b,t1.c),
+		SatCrossEdge(t2.c,t2.a,t1.c,t1.a)
+	};
+	for (int i = 0; i < 11; ++i)
+	{
+		if (!OverlapOnAxis(t1, t2, axisToTest[i]))
+		{
+			if (!CMP(MagSq(axisToTest[i]), 0))return false;
+		}
+	}
+	return true;
+}
+
+vec3 Barycentric(const Point& p, const Triangle& t)
+{
+	vec3 ap = p - t.a;
+	vec3 bp = p - t.b;
+	vec3 cp = p - t.c;
+
+	vec3 ab = t.b - t.a;
+	vec3 ac = t.c - t.a;
+	vec3 bc = t.c - t.b;
+	vec3 cb = t.b - t.c;
+	vec3 ca = t.a - t.c;
+
+	vec3 v = ab - Project(ab, cb);
+	float a = 1.0f - (Dot(v, ap) / Dot(v, ab));
+
+	v = bc - Project(bc, ac);
+	float b = 1.0f - (Dot(v, bp) / Dot(v, bc));
+
+	v = ca - Project(ca, ab);
+	float c = 1.0f - (Dot(v, cp) / Dot(v, ca));
+
+	return vec3(a, b, c);
+}
+
+float Raycast(const Triangle& triangle, const Ray& ray)
+{
+	Plane plane = FromTriangle(triangle);
+	float t = Raycast(plane, ray);
+	if (t < 0.0f)return t;
+	Point res = ray.origin + ray.dir * t;
+
+	vec3 barycentric = Barycentric(res, triangle);
+	if (barycentric.x >= 0.0f && barycentric.x <= 1.0f && barycentric.y >= 0.0f && barycentric.y <= 1.0f && barycentric.z >= 0.0f && barycentric.z <= 1.0f)return t;
+	return -1;
+}
+
+bool Linetest(const Triangle& triangle, const Line& line)
+{
+	Ray ray;
+	ray.origin = line.start;
+	ray.dir = Nomd(line.end - line.start);
+	float t = Raycast(triangle, ray);
+	return t >= 0 && t * t <= LenSq(line);
+}
+
 
 

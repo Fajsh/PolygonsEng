@@ -9,6 +9,10 @@
 #define OBBAABB(obb, aabb) \ AABBOBB(aabb, obb)
 #define PlaneAABB(plane, aabb) \ AABBPlane(aabb, plane)
 #define PlaneOBB(plane, obb) \ OBBPlane(obb,plane)
+#define SphereTriangle(s,t) \ TriangleSphere(t,s)
+#define AABBTriangle(a,t) \ TriangleAABB(t,a)
+#define OBBTriangle(o,t) \ TriangleOBB(t,0)
+#define PlaneTriangle(p,t) \ TrianglePlane(t,p)
 
 //********************structs********************
 
@@ -88,6 +92,29 @@ typedef struct Interval
 	float max;
 }Interval;
 
+typedef struct Mesh
+{
+	int N;
+	union
+	{
+		Triangle* triangles;
+		Point* vertices;
+		float* values;
+	};
+	BVHNode* accelerator;
+	Mesh() :N(0), values(0), accelerator(0) {}
+}Mesh;
+
+typedef struct BVHNode //bounding volume hierarchy
+{
+	AABB bounds;
+	BVHNode* children;
+	int N;
+	int* triangles;
+	BVHNode() : children(0), N(0), triangles(0) {}
+}BVHNode;
+
+
 //********************methods********************
 //line
 
@@ -145,6 +172,7 @@ bool OBBOBB(const OBB& obb1, const OBB& obb2);
 bool OBBPlane(const OBB& obb, const Plane& plane);
 bool PlanePlane(const Plane& plane1, const Plane& plane2);
 
+//********************raycasts, linetests********************
 float Raycast(const Sphere& sphere, const Ray& ray);
 float Raycast(const AABB& aabb, const Ray& ray);
 float Raycast(const OBB& obb, const Ray& ray);
@@ -153,6 +181,25 @@ bool Linetest(const Sphere& sphere, const Line& line);
 bool Linetest(const AABB& aabb, const Line& line);
 bool Linetest(const OBB& obb, const Line& line);
 bool Linetest(const Plane& plane, const Line& line);
+
+bool PointInTriangle(const Point& point, const Triangle& triangle);
+Plane FromTriangle(const Triangle& t);
+Point ClosestPoint(const Triangle& t, const Point& p);
+bool TriangleSphere(const Triangle& t, const Sphere& s);
+Interval GetInterval(const Triangle& triangle, const vec3& axis);
+bool OverlapOnAxis(const AABB& aabb, const Triangle& triangle, const vec3& axis);
+bool TriangleAABB(const Triangle& t, const AABB& a);
+bool OverlapOnAxis(const OBB& obb, const Triangle& triangle, const vec3& axis);
+bool TriangleOBB(const Triangle& t, const OBB& obb);
+bool TrianglePlane(const Triangle& t, const Plane& p);
+bool OverlapOnAxis(const Triangle& t1, const Triangle& t2, const vec3& axis);
+bool TriangleTriangle(const Triangle& t1, const Triangle& t2);
+vec3 SatCrossEdge(const vec3& a, const vec3& b, const vec3& c, const vec3& d);
+bool TriangleTriangleRobust(const Triangle& t1, const Triangle& t2);
+
+vec3 Barycentric(const Point& p, const Triangle& t);
+float Raycast(const Triangle& triangle, const Ray& ray);
+bool Linetest(const Triangle& triangle, const Line& line);
 
 
 
